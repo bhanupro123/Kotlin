@@ -52,9 +52,11 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.code.gson:gson:2.10.1")
     implementation (libs.ui) // or the latest version
     implementation (libs.ui.tooling.preview) // Preview support
     implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation (libs.kotlinx.serialization.json)
     implementation (libs.androidx.navigation.compose)
     implementation (libs.kotlinx.coroutines.core)
     implementation (libs.kotlinx.coroutines.android)
@@ -67,6 +69,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation (libs.androidx.material.icons.extended) // For Material Icons
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

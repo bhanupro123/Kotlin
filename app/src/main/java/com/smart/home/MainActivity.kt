@@ -8,7 +8,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.Modifier 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -33,16 +33,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
             HomeTheme {
-                val sharedViewModel: SharedViewModel = viewModel()
-
-                // Remember the NavController
-                val navController = rememberNavController()
+             NavHost()
 
                 // Set up the NavHost
-                AppNavHost(navController = navController, sharedViewModel = sharedViewModel)
+              ///  AppNavHost(navController = navController, sharedViewModel = sharedViewModel)
 
 //                var sliderPosition by remember { mutableStateOf(0f) }  // Store the slider's value
 
@@ -65,24 +62,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
-
-@Composable
-fun AppNavHost(navController: NavHostController, sharedViewModel: SharedViewModel) {
-    NavHost(navController = navController, startDestination = "guage") {
-        composable("screen1") {
-            Screen1(navController, sharedViewModel)
-        }
-        composable("screen2") {
-            Screen2(navController, sharedViewModel)
-        }
-        composable("guage") {
-            GaugeSliderScreen()
-        }
-    }
-}
-
 
 
 
@@ -126,7 +105,7 @@ fun GaugeSlider(
             drawCircle(
                 color = Color.Red,
                 radius = strokeWidth / 2,
-                center = Offset(knobX, knobY)
+                center = Offset(knobX - 10, knobY - 10)
             )
         }
     }
@@ -184,11 +163,34 @@ fun Screen1(navController: NavHostController, sharedViewModel: SharedViewModel) 
         }) {
             Text("Update Message")
         }
+        GaugeSliderScreen()
     }
 }
 
 @Composable
 fun Screen2(navController: NavHostController, sharedViewModel: SharedViewModel) {
+    val message by sharedViewModel.message.collectAsState()
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = "Screen 2")
+        Text(text = "Message: $message")
+        Button(onClick = {
+            // Update the message in the ViewModel
+            sharedViewModel.updateMessage("Message updated from Screen 2")
+        }) {
+            Text("Update Message")
+        }
+        Button(onClick = {
+            // Navigate back to Screen 1
+            navController.popBackStack()
+        }) {
+            Text("Go back to Screen 1")
+        }
+    }
+}
+
+@Composable
+fun Screen3(navController: NavHostController, sharedViewModel: SharedViewModel) {
     val message by sharedViewModel.message.collectAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
