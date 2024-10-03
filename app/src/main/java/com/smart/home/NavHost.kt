@@ -13,7 +13,8 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.notifii.lockers.SnackbarManager
+import com.smart.home.Devices.AddDevice
+import com.smart.home.Devices.PairDevice
 import com.smart.home.Utils.StringConstants
 import com.smart.home.Utils.iconMap
 import com.smart.home.WebSocket.Category.AddRoom
@@ -36,6 +37,30 @@ fun NavHost() {
             composable("second") { SecondScreen() }
             composable(StringConstants.MAINHALL) { MainHall(navController,sharedViewModel) }
             composable(StringConstants.AddRoom) { AddRoom(navController,sharedViewModel) }
+            composable( StringConstants.ADDDEVICE+"/{category}",
+                arguments = listOf(
+                    navArgument("category") {
+                        defaultValue = ""
+                        type = NavType.StringType
+                    }
+                )) {backStackEntry->
+                val gson: Gson = GsonBuilder().create()
+                val userJson = backStackEntry.arguments?.getString("category")
+                AddDevice(navController,sharedViewModel,
+                    category = gson.fromJson(userJson, Category::class.java))
+            }
+            composable( StringConstants.PAIRDEVICE+"/{category}",
+                arguments = listOf(
+                    navArgument("category") {
+                        defaultValue = ""
+                        type = NavType.StringType
+                    }
+                )) {backStackEntry->
+                val gson: Gson = GsonBuilder().create()
+                val userJson = backStackEntry.arguments?.getString("category")
+                PairDevice(navController,sharedViewModel,
+                    category = gson.fromJson(userJson, Category::class.java))
+            }
             composable( StringConstants.CATEGORYVIEWER+"/{category}",
                 arguments = listOf(
                     navArgument("category") {

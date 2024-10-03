@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -186,12 +187,11 @@ fun FanControlUIMulti() {
     {
         Column(
             modifier = Modifier
-                .fillMaxHeight().weight(1f)
+                .fillMaxHeight().weight(1f).clip(RoundedCornerShape(10.dp)).background(Color.DarkGray)
                 .padding( horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if(isFanOn) Arrangement.SpaceBetween else Arrangement.Center
         ) {
-            // Fan icon with rotation animation
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -260,15 +260,15 @@ fun FanControlUIMulti() {
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxHeight().weight(1f)
-                .padding( horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = if(isFanOn) Arrangement.SpaceBetween else Arrangement.Center
-        ) {
-            SmartHomeFanControl()
-        }
+//        Column(
+//            modifier = Modifier
+//                .fillMaxHeight().weight(1f)
+//                .padding( horizontal = 16.dp).clip(RoundedCornerShape(10.dp)).background(Color.DarkGray),
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = if(isFanOn) Arrangement.SpaceBetween else Arrangement.Center
+//        ) {
+//            SmartHomeFanControl()
+//        }
 
     }
 }

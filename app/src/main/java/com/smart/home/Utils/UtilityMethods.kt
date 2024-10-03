@@ -58,7 +58,8 @@ object StringConstants {
     const val MAINHALL = "MAIN HALL"
     const val AddRoom = "AddRoom"
     const val CATEGORYVIEWER = "CATEGORYVIEWER"
-    const val BUTTON_CANCEL = "Cancel"
+    const val ADDDEVICE = "ADDDEVICE"
+    const val PAIRDEVICE = "PAIRDEVICE"
 }
 fun randomColor(): Color {
     return Color(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())

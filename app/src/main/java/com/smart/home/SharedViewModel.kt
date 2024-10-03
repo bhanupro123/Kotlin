@@ -60,10 +60,10 @@ class SharedViewModel : ViewModel() {
 data class GlobalViewModel(
     @SerializedName("sensors")
     val sensors: List<String> = listOf("ldr", "pir", "temperature"),
-
+    @SerializedName("devicePairTypes")
+    val devicePairTypes : List<String> =listOf("Fan", "TV", "Light Switch", "Night Lamp"),
     @SerializedName("sensorMetaData")
     val sensorMetaData: SensorMetaData = SensorMetaData(),
-
     @SerializedName("devicesTypes")
     val devicesTypes: List<DeviceType> = listOf(),
     @SerializedName("scenes")
@@ -93,7 +93,7 @@ data class GlobalViewModel(
     @SerializedName("categories")
     var categories: MutableList<Category> = mutableListOf(
         Category(id = "LR", name = "Living Room", devices = listOf(
-            Device(id = "LR FAN", type = "Fan", name = "Living Room Fan"),
+            Device(id = "LR FAN", type = "FAN", name = "Living Room Fan"),
             Device(id = "LR TV", type = "TV", name = "Living Room TV")
         )),
         Category(id = "BR", name = "Bedroom", devices = emptyList())
@@ -104,22 +104,16 @@ data class GlobalViewModel(
 data class SensorMetaData(
     @SerializedName("priority")
     val priority: Int = 0,
-
     @SerializedName("enabled")
     val enabled: Boolean = false,
-
     @SerializedName("value")
     val value: Int = 1,
-
     @SerializedName("triggerAt")
     val triggerAt: Int = 1,
-
     @SerializedName("type")
     val type: String = "digital/analog",
-
     @SerializedName("relayon")
     val relayon: List<String> = listOf(),
-
     @SerializedName("schedule")
     val schedule: List<ScheduleMetaData> = listOf()
 )
@@ -127,16 +121,12 @@ data class SensorMetaData(
 data class ScheduleMetaData(
     @SerializedName("priority")
     val priority: Int = 0,
-
     @SerializedName("enabled")
     val enabled: Boolean = false,
-
     @SerializedName("status")
     val status: String = "on",
-
     @SerializedName("startTime")
     val startTime: String = "22:00",
-
     @SerializedName("endTime")
     val endTime: String = "06:00"
 )
@@ -152,16 +142,12 @@ data class DeviceType(
 data class DeviceMetadata(
     @SerializedName("enabled")
     val enabled: Boolean = true,
-
     @SerializedName("isOn")
     val isOn: Boolean = false,
-
     @SerializedName("speed")
     val speed: Int = 3,
-
     @SerializedName("schedule")
     val schedule: List<ScheduleMetaData> = listOf(),
-
     @SerializedName("sensors")
     val sensors: List<SensorMetaData> = listOf()
 )
@@ -189,13 +175,10 @@ data class Device(
 data class Scene(
     @SerializedName("id")
     val id: String,
-
     @SerializedName("name")
     val name: String,
-
     @SerializedName("categories")
     val categories: List<Category> = listOf(),
-
     @SerializedName("schedules")
     val schedules: List<ScheduleMetaData> = listOf()
 )

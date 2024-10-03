@@ -67,6 +67,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.smart.home.Utils.StringConstants
 
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -118,7 +120,15 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
                     RoundedIconButtonRow(color=Color(0xFFFFA500),
                         icon = Icons.Default.MeetingRoom,text=it.name,
                         onClick = {
-                            navController.navigate(StringConstants.CATEGORYVIEWER)
+                            val gson: Gson = GsonBuilder().create()
+                            val category = gson.toJson(it)
+                            navController.navigate(
+                                "${StringConstants.CATEGORYVIEWER}/{category}" //Just modify your route accordingly
+                                    .replace(
+                                        oldValue = "{category}",
+                                        newValue = category
+                                    )
+                            )
                         })
                 }
 
@@ -354,7 +364,7 @@ fun RoundedCardButton(icon: ImageVector, onClick: () -> Unit, text: String="",co
                         tint = Color.White
                     )
                 }
-             //   CustomSwitchWithIcon()
+                //   CustomSwitchWithIcon()
                 VerticalSwitchButton1()
             }
 
@@ -416,7 +426,7 @@ fun VerticalSwitchButton1(imageVector: ImageVector=Icons.Default.PowerSettingsNe
             .background(if(isChecked.value) Color.White else  Color(0xFF3c3e3e), shape = RoundedCornerShape(34.dp)) // Background color
             .clickable { isChecked.value = !isChecked.value } ,
 
-    ) {
+        ) {
         // Thumb that moves vertically
         Box(
             modifier = Modifier
