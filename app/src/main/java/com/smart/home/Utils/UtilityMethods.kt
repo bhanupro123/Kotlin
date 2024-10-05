@@ -59,6 +59,7 @@ object StringConstants {
     const val AddRoom = "AddRoom"
     const val CATEGORYVIEWER = "CATEGORYVIEWER"
     const val ADDDEVICE = "ADDDEVICE"
+    const val IMPORTDEVICE = "IMPORTDEVICE"
     const val PAIRDEVICE = "PAIRDEVICE"
 }
 fun randomColor(): Color {

@@ -1,6 +1,8 @@
 package com.smart.home.Devices
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -58,18 +61,16 @@ import com.smart.home.SnackbarManager
 import com.smart.home.Utils.DeviceType
 import com.smart.home.Utils.StringConstants
 import com.smart.home.Utils.iconMap
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PairDevice(navController: NavController, sharedViewModel: SharedViewModel, category: Category) {
 
-    val globalData=sharedViewModel.globalviewmodal?.value?.globalViewModelData?.value
-    var deviceId by remember { mutableStateOf("") }
-    var deviceName by remember { mutableStateOf("") }
-    var deviceType by remember { mutableStateOf("") }
-
+    val globalData= sharedViewModel.globalviewmodal.value.globalViewModelData.value
+    var deviceConfig by remember { mutableStateOf(com.smart.home.PairDevice()) }
     var expanded by remember { mutableStateOf(false) }
-
+    var icon by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize().verticalScroll(rememberScrollState())
@@ -102,18 +103,23 @@ fun PairDevice(navController: NavController, sharedViewModel: SharedViewModel, c
            horizontalArrangement = Arrangement.spacedBy(10.dp)
        )
        {
-           Column(modifier = Modifier.weight(1f).fillMaxHeight().background(Color.Black)) {
+           Column(   modifier = Modifier
+               .fillMaxHeight().weight(1f)
+               .clip(RoundedCornerShape(10.dp)).background(Color.DarkGray)
+               .padding( horizontal = 16.dp),) {
                OutlinedTextField(
-                   value = deviceId,
-                   onValueChange = { deviceId = it },
+                   value = deviceConfig.id,
+                   onValueChange = {   deviceConfig=(deviceConfig.copy(id = it)) },
                    label = { Text("Device ID") },
                    modifier = Modifier.fillMaxWidth(),
                    singleLine = true
                )
                Spacer(modifier = Modifier.height(10.dp))
                OutlinedTextField(
-                   value = deviceName,
-                   onValueChange = { deviceName = it },
+                   value = deviceConfig.name,
+                   onValueChange = {
+                       deviceConfig=(deviceConfig.copy(name = it))
+                      },
                    label = { Text("Device Name") },
                    modifier = Modifier.fillMaxWidth(),
                    singleLine = true
@@ -123,11 +129,12 @@ fun PairDevice(navController: NavController, sharedViewModel: SharedViewModel, c
                Row(
                    modifier = Modifier
                        .fillMaxWidth().clickable {
-                           expanded=true
+                          if(globalData?.device?.size==0) navController.navigate(StringConstants.ADDDEVICE)
+                           else  expanded=true
                        }
                        .border(
                            width = 1.dp, // Border width
-                           color = Color.Gray, // Border color
+                           color = Color.White, // Border color
                            shape = RoundedCornerShape(6.dp) // Corner radius
                        )
                        .height(55.dp)
@@ -135,7 +142,8 @@ fun PairDevice(navController: NavController, sharedViewModel: SharedViewModel, c
                    verticalAlignment = Alignment.CenterVertically,
                ) {
                    Text(modifier = Modifier.weight(1f).padding(horizontal = 20.dp),
-                       text = if(deviceType.isNotEmpty()) deviceType else "Select Device Type",
+                       text = if(deviceConfig.deviceType.deviceName.isNotEmpty()) deviceConfig.deviceType.deviceName
+                       else "Select Device Type",
                        color = Color.White, fontSize = 16.sp)
                    Icon(tint = Color.White, modifier = Modifier.padding(horizontal = 10.dp), imageVector =  Icons.Filled.ExpandCircleDown, contentDescription = "Add Device")
                    if (expanded) {
@@ -145,20 +153,20 @@ fun PairDevice(navController: NavController, sharedViewModel: SharedViewModel, c
                                .fillMaxWidth(0.665f)
                                .background(Color.White).wrapContentHeight() ,
                            onDismissRequest = { expanded = false }) {
-                           globalData?.devicePairTypes?.forEach { option ->
+                           globalData?.device?.forEach { option ->
                                DropdownMenuItem(onClick = {
 
                                } // Reset search query
                                    ,text={
                                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp),
                                            modifier = Modifier.clickable {
+                                               deviceConfig.deviceType=option
                                                expanded=false
-                                               deviceType=option
                                            }
                                                .fillMaxWidth()
                                                .padding(vertical = 10.dp))
                                        {
-                                           Text(modifier = Modifier.fillMaxWidth(), text = option, color = Color.Black, fontSize = 16.sp)
+                                           Text(modifier = Modifier.fillMaxWidth(), text = option.deviceName, color = Color.Black, fontSize = 16.sp)
 
                                        }
                                    })
@@ -170,36 +178,26 @@ fun PairDevice(navController: NavController, sharedViewModel: SharedViewModel, c
 
                Spacer(modifier = Modifier.height(24.dp))
 
-               IconGrid() {
-
-               }
+               IconGrid(selectedIcon = icon, onIconSelected = {
+                   deviceConfig.icon=it
+                   icon=it
+               })
                Spacer(modifier = Modifier.height(20.dp))
-               Button(
-                   onClick = {
-                       val newDevice = Device(id = deviceId, type = deviceType, name = deviceName)
-                   },
-               ) {
-                   Text("Add Device")
-               }
+
            }
-           if(deviceType.isNotEmpty())
+           if(deviceConfig.deviceType.deviceName.isNotEmpty())
            {
-               Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                   if(deviceType.lowercase()==DeviceType.FAN.lowercase())
+                   if(deviceConfig.deviceType.deviceName.lowercase()==DeviceType.FAN.lowercase())
                    {
-                       FanControlUIMulti()
+                       Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                           DeviceConfiguration(deviceConfig=deviceConfig,
+                               onDeviceChange = { updatedDevice ->
+                                   deviceConfig = updatedDevice // Update the state
+                               })
+                       }
                    }
-               }
            }
-           if(deviceType.isNotEmpty())
-           {
-               Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                   if(deviceType.lowercase()==DeviceType.FAN.lowercase())
-                   {
-                       SmartHomeFanControl()
-                   }
-               }
-           }
+
        }
     }
 }

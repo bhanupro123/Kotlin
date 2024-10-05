@@ -125,7 +125,7 @@ fun CategoryViewer(navController: NavController, sharedViewModel: SharedViewMode
             {
                  if(selectedCategory.type==DeviceType.FAN)
                  {
-                     FanControlUIMulti()
+                     FanControlUIMulti( fanOn = false)
                  }
               else  if(selectedCategory.type==DeviceType.TV)
                 {

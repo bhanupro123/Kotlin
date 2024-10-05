@@ -235,7 +235,9 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
 
         }
         FloatingActionButton(
-            onClick = {  },
+            onClick = {
+                navController.navigate(StringConstants.ADDDEVICE)
+            },
             // Change background color based on the theme
             contentColor = if (isDarkMode) Color.Black else Color.White, // Change icon color
             modifier = Modifier .offset(x= (-10).dp,y=(-10).dp)

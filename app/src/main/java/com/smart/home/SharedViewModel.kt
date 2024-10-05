@@ -62,10 +62,12 @@ data class GlobalViewModel(
     val sensors: List<String> = listOf("ldr", "pir", "temperature"),
     @SerializedName("devicePairTypes")
     val devicePairTypes : List<String> =listOf("Fan", "TV", "Light Switch", "Night Lamp"),
+    @SerializedName("device")
+    val device : MutableList<DeviceType> = mutableListOf(),
     @SerializedName("sensorMetaData")
     val sensorMetaData: SensorMetaData = SensorMetaData(),
     @SerializedName("devicesTypes")
-    val devicesTypes: List<DeviceType> = listOf(),
+    val devicesTypes: List<PairDevice> = listOf(),
     @SerializedName("scenes")
     val scenes: List<Scene> = listOf(
         Scene(
@@ -84,7 +86,6 @@ data class GlobalViewModel(
             ScheduleMetaData(
                 priority = 1,
                 enabled = true,
-                status = "on",
                 startTime = "07:00",
                 endTime = "09:00"
             )
@@ -123,33 +124,62 @@ data class ScheduleMetaData(
     val priority: Int = 0,
     @SerializedName("enabled")
     val enabled: Boolean = false,
-    @SerializedName("status")
-    val status: String = "on",
     @SerializedName("startTime")
     val startTime: String = "22:00",
     @SerializedName("endTime")
-    val endTime: String = "06:00"
+    val endTime: String = "06:00",
+    @SerializedName("deviceMode")
+    val deviceMode: Boolean = true,
+    @SerializedName("metaData")
+    val metaData: MetaData = MetaData(),
+    @SerializedName("sensors")
+    val sensors: List<SensorMetaData> = listOf()
+)
+@Serializable
+data class MetaData(
+    @SerializedName("range")
+    val range: Range = Range(),
+    @SerializedName("isRGB")
+    val isRGB: Boolean = false,
+    @SerializedName("rgbColor")
+    val rgbColor: String = "#f00",
 )
 @Serializable
 data class DeviceType(
-    @SerializedName("id")
-    val id: String,
-
-    @SerializedName("metadata")
-    val metadata: DeviceMetadata = DeviceMetadata()
+    @SerializedName("deviceName")
+    val deviceName: String ="",
+    @SerializedName("deviceMetaData")
+    val deviceMetaData :MetaData = MetaData(),
 )
 @Serializable
-data class DeviceMetadata(
+data class PairDevice(
+    @SerializedName("id")
+    val id: String="",
+    @SerializedName("name")
+    val name: String="",
+    @SerializedName("icon")
+    var icon: String="",
     @SerializedName("enabled")
     val enabled: Boolean = true,
-    @SerializedName("isOn")
-    val isOn: Boolean = false,
-    @SerializedName("speed")
-    val speed: Int = 3,
+    @SerializedName("globalStatus")
+    val globalStatus: Boolean = false,
+    @SerializedName("deviceType")
+    var deviceType: DeviceType = DeviceType(),   //fan , light
     @SerializedName("schedule")
     val schedule: List<ScheduleMetaData> = listOf(),
-    @SerializedName("sensors")
-    val sensors: List<SensorMetaData> = listOf()
+    @SerializedName("initData")
+    val initData: MetaData = MetaData(),
+)
+@Serializable
+data class Range(
+    @SerializedName("min")
+    val min:  Int = 1,
+    @SerializedName("max")
+    val max:  Int = 100,
+    @SerializedName("stepSize")
+    val stepSize: Int = 1,
+    @SerializedName("value")
+    val value:  Int = 1
 )
 @Serializable
 data class Category(
