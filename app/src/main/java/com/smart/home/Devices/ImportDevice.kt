@@ -1,5 +1,6 @@
 package com.smart.home.Devices
 
+import WebSocketService
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,7 +43,7 @@ import com.smart.home.SharedViewModel
 import com.smart.home.Utils.iconMap
 
 @Composable
-fun ImportDevice(navController: NavController, sharedViewModel: SharedViewModel, category: Category) {
+fun ImportDevice(webSocketClient : WebSocketService, navController: NavController, sharedViewModel: SharedViewModel, category: Category) {
 
     var deviceId by remember { mutableStateOf("") }
     var deviceName by remember { mutableStateOf("") }
@@ -63,7 +64,7 @@ fun ImportDevice(navController: NavController, sharedViewModel: SharedViewModel,
                 navController.popBackStack()
             })
             {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Add Device")
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Pair Device")
             }
 
             Text(modifier = Modifier.weight(1f), text = "Pair Device", fontSize = 20.sp)
@@ -72,7 +73,7 @@ fun ImportDevice(navController: NavController, sharedViewModel: SharedViewModel,
 
             })
             {
-                Icon( Icons.Filled.Done, contentDescription = "Add Device")
+                Icon( Icons.Filled.Done, contentDescription = "Pair Device")
             }
         }
         OutlinedTextField(
@@ -115,7 +116,7 @@ fun IconGrid(selectedIcon: String="", onIconSelected: (String) -> Unit) {
                     Icon(
                         imageVector = it,
                         contentDescription = null,
-                        tint = if (icon == selectedIcon) Color.White else Color.Gray,
+                        tint = if (icon == selectedIcon) Color.Green else Color.Gray,
                         modifier = Modifier.size(48.dp)
                     )
                 }

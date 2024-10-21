@@ -17,17 +17,18 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.smart.home.Devices.AddDevice
 import com.smart.home.Devices.ImportDevice
-import com.smart.home.Devices.PairDevice
 import com.smart.home.Utils.StringConstants
 import com.smart.home.Utils.iconMap
 import com.smart.home.WebSocket.Category.AddRoom
 import com.smart.home.WebSocket.Category.CategoryViewer
 import com.smart.home.WebSocket.Category.MainHall
+import WebSocketService
+import androidx.compose.ui.platform.LocalContext
+import com.smart.home.Devices.PairDevices
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavHost() {
-    val sharedViewModel: SharedViewModel = viewModel()
+fun NavHost(webSocketClient : WebSocketService,sharedViewModel:SharedViewModel) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -37,11 +38,11 @@ fun NavHost() {
     ) { paddingValues ->
         NavHost(navController = navController, startDestination = StringConstants.HOME,
         ) {
-            composable(StringConstants.HOME) { HomeScreen(navController,sharedViewModel) }
+            composable(StringConstants.HOME) { HomeScreen(navController,sharedViewModel,webSocketClient) }
             composable("second") { SecondScreen() }
-            composable(StringConstants.ADDDEVICE) { AddDevice(navController,sharedViewModel) }
-            composable(StringConstants.MAINHALL) { MainHall(navController,sharedViewModel) }
-            composable(StringConstants.AddRoom) { AddRoom(navController,sharedViewModel) }
+            composable(StringConstants.ADDDEVICE) { AddDevice(webSocketClient,navController,sharedViewModel) }
+            composable(StringConstants.MAINHALL) { MainHall(webSocketClient,navController,sharedViewModel) }
+            composable(StringConstants.AddRoom) { AddRoom(webSocketClient,navController,sharedViewModel) }
             composable( StringConstants.IMPORTDEVICE+"/{category}",
                 arguments = listOf(
                     navArgument("category") {
@@ -51,7 +52,7 @@ fun NavHost() {
                 )) {backStackEntry->
                 val gson: Gson = GsonBuilder().create()
                 val userJson = backStackEntry.arguments?.getString("category")
-                ImportDevice(navController,sharedViewModel,
+                ImportDevice(webSocketClient,navController,sharedViewModel,
                     category = gson.fromJson(userJson, Category::class.java))
             }
             composable( StringConstants.PAIRDEVICE+"/{category}",
@@ -63,7 +64,7 @@ fun NavHost() {
                 )) {backStackEntry->
                 val gson: Gson = GsonBuilder().create()
                 val userJson = backStackEntry.arguments?.getString("category")
-                PairDevice(navController,sharedViewModel,
+                PairDevices(webSocketClient,navController,sharedViewModel,
                     category = gson.fromJson(userJson, Category::class.java))
             }
             composable( StringConstants.CATEGORYVIEWER+"/{category}",
@@ -75,7 +76,7 @@ fun NavHost() {
                 )) {backStackEntry->
                 val gson: Gson = GsonBuilder().create()
                 val userJson = backStackEntry.arguments?.getString("category")
-                CategoryViewer(navController,sharedViewModel, category = gson.fromJson(userJson, Category::class.java))
+                CategoryViewer(webSocketClient,navController,sharedViewModel, category = gson.fromJson(userJson, Category::class.java))
             }
         }
     }

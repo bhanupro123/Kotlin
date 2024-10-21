@@ -15,24 +15,30 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.smart.home.Category
 import com.smart.home.SharedViewModel
+import WebSocketService
+import com.google.gson.GsonBuilder
+import com.smart.home.Devices.IconGrid
 
 
 @Composable
-fun AddRoom(navController: NavController,sharedViewModel: SharedViewModel) {
-    val globalData=sharedViewModel.globalviewmodal?.value?.globalViewModelData?.value
+fun AddRoom(webSocketService : WebSocketService, navController: NavController, sharedViewModel: SharedViewModel) {
+
     Box(modifier = Modifier.fillMaxSize().background(Color.White))
     {
-         AddCategoryScreen (onAddCategory = {it->
-             globalData?.categories?.add(it)
+         AddCategoryScreen (onAddCategory = {
              navController.popBackStack()
+            webSocketService.sendMessage(
+                "AddRoom"+GsonBuilder().create().toJson(it).toString())
          })
+
     }
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCategoryScreen(onAddCategory: (Category) -> Unit) {
     var categoryName by remember { mutableStateOf("") }
-    var categoryId by remember { mutableStateOf("") }
+    var moreData by remember { mutableStateOf("") }
+    var icon by remember { mutableStateOf("Favorite") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -42,7 +48,7 @@ fun AddCategoryScreen(onAddCategory: (Category) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Add New Category",
+            text = "Add New Room",
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -56,38 +62,44 @@ fun AddCategoryScreen(onAddCategory: (Category) -> Unit) {
             ),
             value = categoryName,
             onValueChange = { categoryName = it },
-            label = { Text("Id") },
+            label = { Text("Name") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
             ),
-            value = categoryId,
-            onValueChange = { categoryId = it },
-            label = { Text("Name") },
+            value = moreData,
+            onValueChange = { moreData = it },
+            label = { Text("Description") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
         Spacer(modifier = Modifier.height(16.dp))
-
-
+        IconGrid(selectedIcon = icon, onIconSelected = {
+           icon=it
+        })
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (categoryName.isNotBlank()&&categoryId.isNotBlank()&&categoryId.length>=10) {
-                    onAddCategory(Category(name = categoryName,
-                        id = categoryId,
-                         devices = emptyList()
+                if (categoryName.isNotBlank()&&moreData.isNotBlank()) {
+
+                    onAddCategory(Category(
+                        name = categoryName,
+                        description = moreData,
+                        icon = icon,
+                        devices =  mutableListOf()
                     ))
                 }
             },
             modifier = Modifier.fillMaxWidth()
         )
         {
-            Text(text = "Add Category")
+            Text(text = "Add Room")
         }
         Spacer(modifier = Modifier.height(16.dp))
     }

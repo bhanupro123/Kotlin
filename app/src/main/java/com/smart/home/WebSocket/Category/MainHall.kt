@@ -32,9 +32,10 @@ import com.smart.home.Devices.TVControlUI
 import com.smart.home.Utils.ColorConstants
 import com.smart.home.Utils.DeviceType
 import com.smart.home.Utils.randomColor
+import WebSocketService
 
 @Composable
-fun MainHall(navController: NavController, sharedViewModel: SharedViewModel) {
+fun MainHall(webSocketClient : WebSocketService, navController: NavController, sharedViewModel: SharedViewModel) {
     var isDarkMode by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     var deviceType by remember { mutableStateOf(DeviceType.FAN) }

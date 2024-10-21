@@ -70,12 +70,15 @@ import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.smart.home.Utils.StringConstants
+import WebSocketService
+import com.notifii.lockers.Utils.getRandomString
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
+fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel,webSocketClient : WebSocketService) {
     var isDarkMode by remember { mutableStateOf(false) }
-    val globalData= sharedViewModel.globalviewmodal.value.globalViewModelData.value
+    val globalData= sharedViewModel.globalViewModelData.collectAsState()
+    val message by sharedViewModel.message.collectAsState()
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF1c1c1a)),
         contentAlignment = Alignment.BottomEnd) {
         Column(
@@ -83,7 +86,7 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            Row(
+            Row (
                 modifier = Modifier
                     .fillMaxWidth().clip(shape = RoundedCornerShape(10.dp))
                     .shadow(2.dp, spotColor = Color.Red) // Apply shadow here
@@ -91,7 +94,7 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
                 verticalAlignment = Alignment.CenterVertically, // Center the content vertically
                 horizontalArrangement = Arrangement.Start // Align content to the start (left)
             )           {
-                Icon(
+                Icon (
                     imageVector = Icons.Rounded.Cottage, // Profile icon
                     contentDescription = "Profile Icon",
                     modifier = Modifier
@@ -104,7 +107,7 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
 
                 Text(
                     style = TextStyle(fontWeight = FontWeight.Medium,fontSize=22.sp),
-                    text = "Hello, Conversa",
+                    text = "Hello, Conversa "+message,
                     color = Color.White // Set text color
                 )
             }
@@ -116,17 +119,18 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
                     .horizontalScroll(rememberScrollState()).padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                globalData?.categories?.forEach {it->
+                globalData.value.categories.forEach { it->
                     RoundedIconButtonRow(color=Color(0xFFFFA500),
                         icon = Icons.Default.MeetingRoom,text=it.name,
                         onClick = {
                             val gson: Gson = GsonBuilder().create()
                             val category = gson.toJson(it)
+
                             navController.navigate(
                                 "${StringConstants.CATEGORYVIEWER}/{category}" //Just modify your route accordingly
                                     .replace(
                                         oldValue = "{category}",
-                                        newValue = category
+                                        newValue = category.replace("#ESP","ESP")
                                     )
                             )
                         })
@@ -135,7 +139,8 @@ fun HomeScreen(navController: NavController, sharedViewModel: SharedViewModel) {
                 RoundedIconButtonRow(color=Color.Black,
                     icon = Icons.Default.Add,text="Add Room",
                     onClick = {
-                        navController.navigate(StringConstants.AddRoom)
+
+                   navController.navigate(StringConstants.AddRoom)
                     })
 
             }

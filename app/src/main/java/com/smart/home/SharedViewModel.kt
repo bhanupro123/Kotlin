@@ -1,91 +1,87 @@
 package com.smart.home
 
+
 import androidx.lifecycle.ViewModel
-import androidx.compose.runtime.State
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
-class GlobalSharedViewModel : ViewModel() {
 
-    // LiveData for the global view model data
-    private val _globalViewModelData = MutableLiveData<GlobalViewModel>()
-    val globalViewModelData: LiveData<GlobalViewModel> = _globalViewModelData
-
-    init {
-        // Initialize with default values
-        _globalViewModelData.value = GlobalViewModel()
-    }
-
-    // Function to update the GlobalViewModel and notify observers
-    fun updateGlobalViewModelData(newData: GlobalViewModel) {
-        _globalViewModelData.value = newData
-    }
-
-    // Function to update specific device, sensor, scene, or category
-//    fun updateDevice(categoryId: String, deviceId: String, updatedDevice: Device) {
-//        val currentData = _globalViewModelData.value?.copy() ?: return
-//        currentData.categories.find { it.id == categoryId }?.devices?.let { devices ->
-//            devices.replaceAll { if (it.id == deviceId) updatedDevice else it }
-//        }
-//        _globalViewModelData.value = currentData
-//    }
-
-    // Add more functions for updating sensor metadata, scenes, etc. as needed
-}
 
 
 class SharedViewModel : ViewModel() {
     // StateFlow for managing the message state
+
     private val _message = MutableStateFlow("Initial Message")
     val message: StateFlow<String> get() = _message
+
     // Function to update the message
     fun updateMessage(newMessage: String) {
         _message.value = newMessage
     }
+    private val _globalViewModelData = MutableStateFlow(GlobalViewModel())
+    val globalViewModelData: StateFlow<GlobalViewModel> get() = _globalViewModelData
 
-    private val _globalviewmodal = MutableStateFlow(GlobalSharedViewModel())
-    val globalviewmodal: StateFlow<GlobalSharedViewModel> get() = _globalviewmodal
-    fun updateMessage1(globalviewmodal: GlobalSharedViewModel) {
-        _globalviewmodal.value = globalviewmodal
+    // Function to update GlobalViewModel
+    fun updateGlobalData(newData: GlobalViewModel) {
+        _globalViewModelData.value = newData
     }
+
 }
+
+@Serializable
+data class DeviceTypeModel(
+    @SerializedName("brightness")
+    val brightness: Int?=0,
+    @SerializedName("maxBrightness")
+    val maxBrightness: Int?=100  ,
+    @SerializedName("icon")
+    val icon: String?="",
+    @SerializedName("id")
+    val id: Int?=0,
+    @SerializedName("isRGB")
+    val isRGB: Int?=0,
+    @SerializedName("maxLevel")
+    val maxLevel: Int?=100,
+    @SerializedName("level")
+    val level: Int?=1,
+    @SerializedName("mode")
+    val mode: String?="0",
+    @SerializedName("modeValue")
+    val modeValue: String?="",
+    @SerializedName("more")
+    val more: String?="",
+    @SerializedName("name")
+    var name: String?="",
+    @SerializedName("rgbColor")
+    val rgbColor: String?="",
+)
 
 @Serializable
 data class GlobalViewModel(
     @SerializedName("sensors")
     val sensors: List<String> = listOf("ldr", "pir", "temperature"),
-    @SerializedName("devicePairTypes")
-    val devicePairTypes : List<String> =listOf("Fan", "TV", "Light Switch", "Night Lamp"),
-    @SerializedName("device")
-    val device : MutableList<DeviceType> = mutableListOf(),
     @SerializedName("sensorMetaData")
     val sensorMetaData: SensorMetaData = SensorMetaData(),
     @SerializedName("devicesTypes")
     val devicesTypes: List<PairDevice> = listOf(),
+    @SerializedName("devicesCat")
+    val devicesCat: List<String> = listOf("FAN","TV","LIGHT","RGB"),
+    @SerializedName("devicesTypesModels")
+    var devicesTypesModels: MutableList<DeviceTypeModel> = mutableListOf(),
     @SerializedName("scenes")
     val scenes: List<Scene> = listOf(
         Scene(
         id = "1",
         name = "Good Morning",
         categories = listOf(
-            Category(
-                id = "LR",
-                name = "Living Room",
-                devices = listOf(
-                    Device(id = "LR_FAN", type = "Fan", name = "Living Room Fan")
-                )
-            )
+
         ),
         schedules = listOf(
             ScheduleMetaData(
                 priority = 1,
-                enabled = true,
+                enabled = 1,
                 startTime = "07:00",
                 endTime = "09:00"
             )
@@ -93,102 +89,119 @@ data class GlobalViewModel(
     )),
     @SerializedName("categories")
     var categories: MutableList<Category> = mutableListOf(
-        Category(id = "LR", name = "Living Room", devices = listOf(
-            Device(id = "LR FAN", type = "FAN", name = "Living Room Fan"),
-            Device(id = "LR TV", type = "TV", name = "Living Room TV")
-        )),
-        Category(id = "BR", name = "Bedroom", devices = emptyList())
+     //   Category(id = "BR", name = "Bedroom", devices = emptyList())
     )
 
 )
 @Serializable
 data class SensorMetaData(
+    @SerializedName("id")
+    val id: String="",
     @SerializedName("priority")
     val priority: Int = 0,
     @SerializedName("enabled")
-    val enabled: Boolean = false,
+    val enabled: Int = 0,
     @SerializedName("value")
     val value: Int = 1,
+    @SerializedName("sensorName")
+    val sensorName: String = "",
     @SerializedName("triggerAt")
     val triggerAt: Int = 1,
     @SerializedName("type")
-    val type: String = "digital/analog",
+    val type: String = "",
+    @SerializedName("name")
+    val name: String = "",
     @SerializedName("relayon")
-    val relayon: List<String> = listOf(),
-    @SerializedName("schedule")
-    val schedule: List<ScheduleMetaData> = listOf()
+    val relayon: String = "",
 )
 @Serializable
 data class ScheduleMetaData(
+    @SerializedName("id")
+    val id: Int=-1,
+    @SerializedName("tableName")
+    val tableName: String="",
+    @SerializedName("name")
+    val name: String="",
     @SerializedName("priority")
     val priority: Int = 0,
     @SerializedName("enabled")
-    val enabled: Boolean = false,
+    val enabled: Int = 0,
     @SerializedName("startTime")
     val startTime: String = "22:00",
     @SerializedName("endTime")
     val endTime: String = "06:00",
-    @SerializedName("deviceMode")
-    val deviceMode: Boolean = true,
-    @SerializedName("metaData")
-    val metaData: MetaData = MetaData(),
+    @SerializedName("deviceMetaInfo")
+    var deviceMetaInfo: DeviceMetaInfo = DeviceMetaInfo(),
     @SerializedName("sensors")
     val sensors: List<SensorMetaData> = listOf()
 )
+
+
+
+
 @Serializable
-data class MetaData(
-    @SerializedName("range")
-    val range: Range = Range(),
-    @SerializedName("isRGB")
-    val isRGB: Boolean = false,
-    @SerializedName("rgbColor")
-    val rgbColor: String = "#f00",
-)
-@Serializable
-data class DeviceType(
-    @SerializedName("deviceName")
-    val deviceName: String ="",
-    @SerializedName("deviceMetaData")
-    val deviceMetaData :MetaData = MetaData(),
-)
-@Serializable
-data class PairDevice(
+data class DeviceMetaInfo(
     @SerializedName("id")
     val id: String="",
+    @SerializedName("name")
+    var name: String="",
+    @SerializedName("icon")
+    var icon: String="",
+    @SerializedName("enabled")
+    val enabled: Int = 0,
+    @SerializedName("_actionType")
+    val _actionType: String = "", //timer , user , sensor
+    @SerializedName("_running")
+    val _running: Int = 0,
+    @SerializedName("type")
+    var type: String="FAN",
+    @SerializedName("range")
+    var range: Int = 1,
+    @SerializedName("mode")
+    val mode: String = "", //timer , user , sensor
+    @SerializedName("destination")
+    val destination: String = "#ESP1",
+    @SerializedName("rgbColor")
+    val rgbColor: String = "",
+    @SerializedName("outputMode")
+    val outputMode: String = "",  //animation
+    @SerializedName("schedule")
+    val schedule: List<ScheduleMetaData> = listOf(),
+    @SerializedName("roomId")
+    val roomId: String = "",
+)
+
+
+@Serializable
+data class PairDevice(
     @SerializedName("name")
     val name: String="",
     @SerializedName("icon")
     var icon: String="",
     @SerializedName("enabled")
-    val enabled: Boolean = true,
+    val enabled: Int = 0,
+    @SerializedName("actionType")
+    val actionType: String = "", //timer , user , sensor
     @SerializedName("globalStatus")
     val globalStatus: Boolean = false,
-    @SerializedName("deviceType")
-    var deviceType: DeviceType = DeviceType(),   //fan , light
+    @SerializedName("deviceTypeModel")
+    var deviceTypeModel: DeviceTypeModel = DeviceTypeModel(),   //fan , light
     @SerializedName("schedule")
     val schedule: List<ScheduleMetaData> = listOf(),
-    @SerializedName("initData")
-    val initData: MetaData = MetaData(),
 )
-@Serializable
-data class Range(
-    @SerializedName("min")
-    val min:  Int = 1,
-    @SerializedName("max")
-    val max:  Int = 100,
-    @SerializedName("stepSize")
-    val stepSize: Int = 1,
-    @SerializedName("value")
-    val value:  Int = 1
-)
+
 @Serializable
 data class Category(
     @SerializedName("id")
     val id: String="",
     @SerializedName("name")
     val name: String="",
-    @SerializedName("devic  es")
-    val devices: List<Device> = listOf()
+    @SerializedName("icon")
+    val icon: String="",
+    @SerializedName("description")
+    val description: String="",
+    @SerializedName("devices")
+    val devices:MutableList<DeviceMetaInfo> = mutableListOf()
 )
 @Serializable
 data class Device(

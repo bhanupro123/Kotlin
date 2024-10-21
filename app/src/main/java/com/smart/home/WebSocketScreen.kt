@@ -8,7 +8,7 @@ import com.smart.home.WebSocket.WebSocketViewModel
 
 @Composable
 fun WebSocketScreen(viewModel: WebSocketViewModel = viewModel()) {
-    var message by remember { mutableStateOf("") }
+    val message by remember { mutableStateOf("") }
 
     Column {
         Button(onClick = { viewModel.sendMessage("Message from Android") }) {
@@ -18,14 +18,14 @@ fun WebSocketScreen(viewModel: WebSocketViewModel = viewModel()) {
     }
 }
 
-@Composable
-fun MyApp() {
-    val viewModel: WebSocketViewModel = viewModel()
-
-    // Start WebSocket when app starts
-    LaunchedEffect(Unit) {
-        viewModel.startWebSocket("ws://your-websocket-url")
-    }
-
-    WebSocketScreen(viewModel = viewModel)
-}
+//@Composable
+//fun MyApp() {
+//    val viewModel: WebSocketViewModel = viewModel()
+//
+//    // Start WebSocket when app starts
+//    LaunchedEffect(Unit) {
+//        viewModel.startWebSocket("ws://your-websocket-url")
+//    }
+//
+//    WebSocketScreen(viewModel = viewModel)
+//}

@@ -1,9 +1,7 @@
 package com.smart.home.Devices
 
-import WebSocketService
 import android.annotation.SuppressLint
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,8 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,30 +16,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.ExpandCircleDown
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,31 +39,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.smart.home.Category
-import com.smart.home.Device
-import com.smart.home.DeviceMetaInfo
-import com.smart.home.DeviceTypeModel
 import com.smart.home.SharedViewModel
-import com.smart.home.SnackbarManager
 import com.smart.home.Utils.DeviceType
-import com.smart.home.Utils.iconMap
-
+import com.smart.home.Utils.StringConstants
+import WebSocketService
+import androidx.compose.material3.Button
+import com.google.gson.GsonBuilder
+import com.smart.home.DeviceMetaInfo
+import com.smart.home.PairDevice
+import com.smart.home.ScheduleMetaData
+import com.smart.home.SensorMetaData
+import com.smart.home.SnackbarManager
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddDevice(webSocketClient : WebSocketService,
-              navController: NavController,
-              sharedViewModel: SharedViewModel,
-              category: Category=Category(),inside:Boolean=false) {
+fun PairDevices(webSocketClient : WebSocketService,
+                navController: NavController,
+                sharedViewModel: SharedViewModel,
+                category: Category,inside:Boolean=false) {
 
     val globalData= sharedViewModel.globalViewModelData.value
     var deviceConfig by remember { mutableStateOf(DeviceMetaInfo()) }
@@ -103,7 +92,7 @@ fun AddDevice(webSocketClient : WebSocketService,
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Add Device")
                 }
 
-            Text(modifier = Modifier.weight(1f), text = "Add Device", fontSize = 20.sp)
+            Text(modifier = Modifier.weight(1f), text = "Pair Device", fontSize = 20.sp)
             Box(modifier = Modifier.clickable {
 
                 if(deviceConfig.name.length<2)
@@ -198,6 +187,7 @@ fun AddDevice(webSocketClient : WebSocketService,
 
                 IconGrid(selectedIcon = icon, onIconSelected = {
                     deviceConfig.icon=it
+                    deviceConfig.icon=it
                     icon=it
                 })
                 Spacer(modifier = Modifier.height(20.dp))
@@ -205,15 +195,80 @@ fun AddDevice(webSocketClient : WebSocketService,
             }
             if(deviceConfig.type.isNotEmpty() )
             {
-                if(deviceConfig.type.lowercase()== DeviceType.FAN.lowercase())
+                if(deviceConfig.type.lowercase()==DeviceType.FAN.lowercase())
                 {
                     Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                        DeviceConfiguration(deviceMetaInfo=deviceConfig,
-                            onDeviceChange = { updatedDevice ->
-                                deviceConfig = updatedDevice // Update the state
-                            }, onDone = {
+                        Button(
+                            onClick = {
+                                SnackbarManager.showSnackbar("schedule_"+category.id+"_"+deviceConfig.name)
+                                println( GsonBuilder().create().toJson("schedule_"))
 
-                            }, isItNew = true, webSocketClient = webSocketClient)
+                                val schedule = ScheduleMetaData(
+                                    deviceMetaInfo = DeviceMetaInfo(),
+                                    enabled = 1,
+                                    endTime = "06:00",
+                                    tableName = "schedule_"+category.id+"_"+deviceConfig.name,
+                                    name = "111",
+                                    priority = 1,
+                                    sensors = listOf(
+                                        SensorMetaData(
+                                            enabled = 1,
+                                            id = "",
+                                            name = "Sence",
+                                            priority = 1,
+                                            relayon = "",
+                                            sensorName = "PIR",
+                                            triggerAt = 1,
+                                            type = "Digital",
+                                            value = 1
+                                        )
+                                    ),
+                                    startTime = "22:00"
+                                )
+                                webSocketClient.sendMessage( "schedule_"+Json.encodeToString(listOf(schedule)))
+
+                            },
+                            modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()
+                        ) {
+                            Text(text = "Save 1")
+                        }
+//                        DeviceConfiguration(deviceMetaInfo=deviceConfig,
+//                            onDeviceChange = { updatedDevice ->
+//                                deviceConfig = updatedDevice // Update the state
+//                            },
+//                            onDone = {
+//                                SnackbarManager.showSnackbar("schedule_"+category.id+"_"+deviceConfig.name)
+//                                println( GsonBuilder().create().toJson("schedule_"))
+//
+//                                val schedule = ScheduleMetaData(
+//                                    deviceMetaInfo = DeviceMetaInfo(
+//
+//                                    ),
+//                                    enabled = 1,
+//                                    endTime = "06:00",
+//                                    id = "schedule_"+category.id+"_"+deviceConfig.name,
+//                                    name = "111",
+//                                    priority = 1,
+//                                    sensors = listOf(
+//                                        SensorMetaData(
+//                                            enabled = 1,
+//                                            id = "",
+//                                            name = "Sence",
+//                                            priority = 1,
+//                                            relayon = "",
+//                                            sensorName = "PIR",
+//                                            triggerAt = 1,
+//                                            type = "Digital",
+//                                            value = 1
+//                                        )
+//                                    ),
+//                                    startTime = "22:00"
+//                                )
+//
+//
+//                                webSocketClient.sendMessage( "schedule_"+Json.encodeToString(listOf(schedule)))
+//
+//                            },false)
 
                         Spacer(modifier = Modifier.height(10.dp))
                     }
@@ -223,7 +278,4 @@ fun AddDevice(webSocketClient : WebSocketService,
         }
     }
 }
-
-
-
 

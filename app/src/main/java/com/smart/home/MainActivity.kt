@@ -1,9 +1,13 @@
 package com.smart.home
 
+import WebSocketService
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -31,35 +35,28 @@ import androidx.navigation.compose.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var webSocketClient: WebSocketService
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val sharedViewModel: SharedViewModel by viewModels()
+
+        // Initialize WebSocketService with the SharedViewModel
+        webSocketClient = WebSocketService(this)
+        webSocketClient.connectWebSocket(sharedViewModel)
+
 //        enableEdgeToEdge()
         setContent {
             HomeTheme {
-             NavHost()
-
-                // Set up the NavHost
-              ///  AppNavHost(navController = navController, sharedViewModel = sharedViewModel)
-
-//                var sliderPosition by remember { mutableStateOf(0f) }  // Store the slider's value
-
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(16.dp),
-//                    verticalArrangement = Arrangement.Center
-//                ) {
-//                    Text(text = "Slider Value: ${sliderPosition.toInt()}")
-//                    Spacer(modifier = Modifier.height(8.dp))
-//                    Slider(
-//                        value = sliderPosition,
-//                        onValueChange = { sliderPosition = it },  // Update the value when the user interacts with the slider
-//                        valueRange = 0f..100f,  // Define the range of the slider
-//                        steps = 10  // Optional: adds intermediate steps
-//                    )
-//                }
+             NavHost(webSocketClient,sharedViewModel)
             }
         }
+    }
+
+    override fun onDestroy() {
+        webSocketClient.closeWebSocket()
+        super.onDestroy()
     }
 }
 
@@ -209,6 +206,7 @@ fun Screen3(navController: NavHostController, sharedViewModel: SharedViewModel) 
             Text("Go back to Screen 1")
         }
     }
+
 }
 
 
