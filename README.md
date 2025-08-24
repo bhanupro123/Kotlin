@@ -44,7 +44,7 @@ The app uses the following technologies:
 
 ## Credits
 
-This app was created by [KrishnaZyala]. It uses the following libraries and resources:
+This app was created by [bhanupro]. It uses the following libraries and resources:
 
 - **Mobile FaceNet:** The Mobile FaceNet model used in the app was created by Sirius AI and is available on GitHub at [https://github.com/sirius-ai/MobileFaceNet_TFLite_Android](https://github.com/sirius-ai/MobileFaceNet_TFLite_Android).
 

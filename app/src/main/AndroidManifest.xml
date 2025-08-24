@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
+    <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -15,7 +16,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application
         android:usesCleartextTraffic="true"
-        android:name=".app.MAIN$HiltApp"
+        android:name="com.bhanupro.faceRecognition.app.MAIN$HiltApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
@@ -25,20 +26,27 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        tools:targetApi="tiramisu">
+        tools:targetApi="tiramisu"
+        tools:ignore="MissingClass">
         <activity
-            android:name=".app.MAIN$AppActivity"
+            android:name="com.bhanupro.faceRecognition.app.MAIN$AppActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter" />
         </activity>
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="face" />
         <receiver
-            android:name=".MyDeviceAdminReceiver"
+            android:name="com.bhanupro.faceRecognition.MyDeviceAdminReceiver"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
