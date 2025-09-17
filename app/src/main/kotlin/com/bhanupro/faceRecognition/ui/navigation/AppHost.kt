@@ -15,12 +15,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bhanupro.faceRecognition.data.model.AppState
 import com.bhanupro.faceRecognition.ui.screen.dashBoard.DoorControlDashboard
-import com.bhanupro.faceRecognition.ui.screen.multiServer.MultiServerScreen
-import com.bhanupro.faceRecognition.ui.screen.home.AudioStream
 import com.bhanupro.faceRecognition.ui.screen.home.HomeScreen
 import com.bhanupro.faceRecognition.ui.screen.home.InitScreen
 import com.bhanupro.faceRecognition.ui.screen.home.PermissionsScreen
-import com.bhanupro.faceRecognition.ui.screen.home.VideoReceiverScreen
 import com.bhanupro.faceRecognition.ui.screen.ownServer.OwnServerScreen
 import kotlinx.coroutines.CoroutineScope
 
@@ -81,11 +78,8 @@ object NavRoutes {
     const val ADD_FACE = "addFace"
     const val FACES = "faces"
     const val DASHBOARD = "dashboard"
-    const val AUDIO_STREAM = "audioStream"
     const val PERMISSIONS = "permissions"
-    const val MEDIA = "media"
     const val OWN_SERVER = "ownserver"
-    const val MULTI_SERVER = "multiserver"
 
 }
 
@@ -108,19 +102,11 @@ fun appNavGraphBuilder(state: AppState, host: NavHostController): NavGraphBuilde
     composable(NavRoutes.DASHBOARD) {
         DoorControlDashboard(state)
     }
-    composable(NavRoutes.AUDIO_STREAM) {
-        AudioStream(state)
-    }
     composable(NavRoutes.PERMISSIONS) {
         PermissionsScreen(host)
-    }
-    composable(NavRoutes.MEDIA) {
-        VideoReceiverScreen()
     }
     composable(NavRoutes.OWN_SERVER) {
         OwnServerScreen()
     }
-    composable(NavRoutes.MULTI_SERVER) {
-        MultiServerScreen()
-    }
+
 }

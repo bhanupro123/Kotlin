@@ -14,32 +14,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bhanupro.faceRecognition.ui.navigation.LocalGlobalViewModel
 import com.bhanupro.faceRecognition.ui.screen.ownServer.newDevice.ConnectionState
 import com.bhanupro.faceRecognition.ui.screen.ownServer.newDevice.DeviceCardView
 
 @Composable
 fun OwnServerScreen() {
-    val viewModel: Multiple_Stream_ViewModel = viewModel()
+
     val context = LocalContext.current
+    val globalViewModel = LocalGlobalViewModel.current
+    val masterController = globalViewModel.masterController
+
     val application = context.applicationContext as Application
-    val masterController = remember { MasterController(context,viewModel) }
     // These will only trigger recomposition when their values change
-    val signalConnected by viewModel.signalConnected.collectAsState()
-    val videoSignal by viewModel.videoConnected.collectAsState()
-    val audioSignal by viewModel.audioConnected.collectAsState()
-    val devices by viewModel.devices.collectAsState()
-    val ip=getWifiIpAddress(context)
+    val signalConnected by  globalViewModel.signalConnected.collectAsState()
+    val videoSignal by  globalViewModel.videoConnected.collectAsState()
+    val audioSignal by  globalViewModel.audioConnected.collectAsState()
+    val devices by  globalViewModel.devices.collectAsState()
+
     // Convert to map for quick lookup without rebuilding UI each time
     val deviceMap by remember(devices) {
         mutableStateOf(devices.associateBy { it.ip })
     }
 
-    DisposableEffect(Unit) {
-        masterController.start("ws://192.168.0.149:8080") // your signaling server
-        onDispose {
-            masterController.stopAll()
-        }
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()

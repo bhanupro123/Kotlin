@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bhanupro.faceRecognition.ui.global.GlobalViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope

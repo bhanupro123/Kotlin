@@ -92,7 +92,8 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
     implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.3")
 
-    /* Misc */
+    /* Misc */ 
+    implementation "androidx.compose.runtime:runtime-livedata:1.9.1"
     implementation("com.github.mik3y:usb-serial-for-android:3.4.6")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")

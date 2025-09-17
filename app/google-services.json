@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "623000915865",
+    "firebase_url": "https://smart-home-7a644-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smart-home-7a644",
+    "storage_bucket": "smart-home-7a644.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623000915865:android:2c457d6bcbc8bd1e004d08",
+        "android_client_info": {
+          "package_name": "com.bhanupro.faceRecognition"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcocIcuOybojFYpKsArPudFUK2Nln4HfE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

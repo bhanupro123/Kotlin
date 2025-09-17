@@ -8,6 +8,7 @@ import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.YuvImage
 import androidx.camera.core.ImageProxy
+import com.bhanupro.faceRecognition.lib.DeviceTypeStorage.KEY_DEVICE_TYPE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -15,20 +16,18 @@ import java.io.ByteArrayOutputStream
 import java.net.Inet4Address
 import java.net.InetAddress
 
-suspend fun getPiIPv4(hostname: String = "raspberrypi.local"): String? {
+suspend fun getPiIPv4(context:Context ): String? {
     return withContext(Dispatchers.IO) {
         try {
-            val addresses = InetAddress.getAllByName(hostname)
+            val addresses = InetAddress.getAllByName("raspberrypi.local")
             val ipv4 = addresses.firstOrNull { it is Inet4Address }
             ipv4?.hostAddress
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            DeviceIpStorage.getDeviceIp(context)
         }
     }
 }
-
-
 object PinStorage {
     private const val PREF_NAME = "app_prefs"
     private const val KEY_PIN = "user_pin"
@@ -63,12 +62,41 @@ object DeviceTypeStorage {
             .apply()
     }
 
-    fun getDeviceType(context: Context): String {
+    fun getDeviceType(context: Context): String{
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_DEVICE_TYPE, null) ?: DeviceType.NORMAL.name
+            .getString(KEY_DEVICE_TYPE, null) ?: ""
+    }
+}
+object DeviceIdManager {
+    private const val PREFS_NAME = "app_prefs"
+    private const val KEY_DEVICE_ID = "device_id"
+
+    fun getOrCreateId(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        var id = prefs.getString(KEY_DEVICE_ID, null)
+        if (id == null) {
+            id = java.util.UUID.randomUUID().toString()
+            prefs.edit().putString(KEY_DEVICE_ID, id).apply()
+        }
+        return "!"+id+"!"
     }
 }
 
+object DeviceIpStorage {
+    private const val PREF_NAME = "app_prefs"
+    private const val KEY_DEVICE_IP = "device_ip"
+    fun saveDeviceIp(context: Context, config: String) {
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_DEVICE_IP, config)
+            .apply()
+    }
+
+    fun getDeviceIp(context: Context): String {
+        return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_DEVICE_IP, null) ?: "192.168.0.149"
+    }
+}
 object MediaUtils {
     val ImageProxy.bitmap: Result<Bitmap?>
         get(): Result<Bitmap?> = runCatching {

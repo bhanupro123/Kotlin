@@ -9,6 +9,8 @@ import android.hardware.usb.UsbManager
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hoho.android.usbserial.driver.UsbSerialDriver
@@ -19,10 +21,16 @@ import com.bhanupro.faceRecognition.app.SnackbarManager
 import com.bhanupro.faceRecognition.lib.DeviceType
 import com.bhanupro.faceRecognition.lib.DeviceTypeStorage
 import com.bhanupro.faceRecognition.lib.getPiIPv4
+import com.bhanupro.faceRecognition.ui.screen.ownServer.Device_Info
+import com.bhanupro.faceRecognition.ui.screen.ownServer.MasterController
+import com.bhanupro.faceRecognition.ui.screen.ownServer.newDevice.ConnectionState
+
+import com.google.gson.Gson
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONObject
 import java.io.IOException
 
 // --- USB attach/detach receiver ---
@@ -66,6 +74,27 @@ class UsbPermissionReceiver(
 
 // --- User roles ---
 enum class UserRole { ADMIN, GUEST, MEMBER }
+data class Device(
+    val id: String,
+    val name: String,
+    val desc: String,
+    val catogery: String,
+    val deviceType: String,
+    val animation: String,
+    var brightness: Int,
+    var enabled: Boolean,
+    val startTime: String,
+    val endTime: String,
+    var lastStatus: Boolean,
+    val lastTriggerAt: String,
+    var mode: String,
+    var more: String,
+    var sensors: String,
+    var status: Boolean,
+    var temp: String,
+    var timeout: String,
+    var toggled: Boolean
+)
 
 // --- User data ---
 data class UserData(
@@ -76,29 +105,131 @@ data class UserData(
     val loginMode: String = ""
 )
 
-class GlobalViewModel(private val context: Context) : ViewModel() {
+class GlobalViewModel (private val context: Context) : ViewModel() {
+
+    val masterController: MasterController by lazy {
+        MasterController(context,this)
+    }
+
+
+    private val _devicesList = MutableStateFlow<List<Device>>(emptyList())
+
+    // public immutable flow
+    val devicesList: StateFlow<List<Device>> = _devicesList.asStateFlow()
+
+    fun setDevices(devices: List<Device>) {
+        _devicesList.value = devices
+    }
+
+    fun clearDevices() {
+        _devicesList.value = emptyList()
+    }
+
 
     companion object {
         const val USB_PERMISSION_ACTION = "com.bhanupro.faceRecognition.USB_PERMISSION"
     }
+    private val _devices = MutableStateFlow<List<Device_Info>>(emptyList())
+    val devices = _devices.asStateFlow()
 
+    private val _signalConnected = MutableStateFlow(false)
+    private val _videoServerStatus= MutableStateFlow(ConnectionState.AVAILABLE)
+    private val _audioServerStatus= MutableStateFlow(ConnectionState.AVAILABLE)
+    val signalConnected = _signalConnected.asStateFlow()
+    val videoConnected = _videoServerStatus.asStateFlow()
+
+    val audioConnected = _audioServerStatus.asStateFlow()
+
+    fun addDevice(device: Device_Info) {
+        if (_devices.value.any { it.ip == device.ip }) return
+        _devices.value += device
+    }
+
+    fun removeDeviceByIp(ip: String) {
+        _devices.value = _devices.value.filterNot { it.ip == ip }
+    }
+
+    fun setSignalConnected(connected: Boolean) {
+        _signalConnected.value = connected
+        if (!connected) _devices.value = emptyList()
+    }
+    fun setVideoChanged(connected: ConnectionState) {
+        _videoServerStatus.value = connected
+    }
+    fun setAudioChanged(connected: ConnectionState) {
+        _audioServerStatus.value = connected
+    }
     private val _userData = MutableStateFlow(UserData())
     private val _deviceType =
-        MutableStateFlow(DeviceType.valueOf(DeviceTypeStorage.getDeviceType(context)))
+        MutableStateFlow(
+            runCatching {
+                val saved = DeviceTypeStorage.getDeviceType(context)
+                if (saved.isBlank()) DeviceType.SECURITY_MAIN  // default
+                else DeviceType.valueOf(saved)
+            }.getOrElse { DeviceType.SECURITY_MAIN } // fallback in case of invalid value
+        )
+
     val userData: StateFlow<UserData> = _userData.asStateFlow()
     val deviceType: StateFlow<DeviceType> = _deviceType.asStateFlow()
-
+    private val _wsUrl = MutableStateFlow<String?>("")
+    val wsUrl: StateFlow<String?> = _wsUrl
     private val componentName = ComponentName(context, MyDeviceAdminReceiver::class.java)
     private val devicePolicyManager =
         context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
-    fun fetchPiIp() {
-        viewModelScope.launch {
-           val piIp = getPiIPv4()
-            println(piIp+"QWERTY")
+    fun sendDeviceUpdate(device: Device) {
+        try {
+            val gson = Gson()
+            val jsonString = gson.toJson(device)
+            val json = JSONObject(jsonString)   // convert gson output to JSONObject
+            json.put("type", "update_device")
+           // sendMessage(json.toString())
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
-    fun setUser(user: UserData) {
+
+    fun fetchWsUrl() {
+        val url =wsUrl.value
+        if (!url.isNullOrBlank()) {
+            masterController.start(url)
+            return
+        } else {
+            SnackbarManager.showMessage("WebSocket URL is null or empty")
+        }
+//        val ref = Firebase.database
+//            .getReference("cloudflare_tunnel/url")
+//        ref.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+//            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+//                val url = snapshot.getValue<String>()
+//
+//                if (url != null) {
+//                    _wsUrl.value = url
+//                    masterController.start(url)
+//                }
+//                else{
+//                    SnackbarManager.showMessage("Firebase url is null")
+//                }
+//            }
+//            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+//                println("Failed to read WS URL: ${error.message}")
+//            }
+//        })
+//
+
+    }
+
+    fun fetchPiIp() {
+        viewModelScope.launch {
+           val piIp = getPiIPv4(context)
+            println(piIp+"QWERTY")
+            masterController.start("ws://${piIp}:8080")
+        }
+    }
+    fun setUser(user: UserData,isLogout:Boolean=false) {
+        if(isLogout&&deviceType.value==DeviceType.SECURITY_MAIN) {
+            clearDevices()
+        }
         _userData.value = user
     }
 
@@ -164,9 +295,15 @@ class GlobalViewModel(private val context: Context) : ViewModel() {
         driver?.let { connectUsb(it) }
     }
 
-    init {
+
+    override fun onCleared() {
+        super.onCleared()
+        masterController.stopAll() // clean up if you have a stop/close function
+    }
+
+    fun startUsbAutoConnect() {
+        stopUsbAutoConnect()
         // Register attach/detach receiver
-        checkAndConnectUsb()
         val attachFilter = IntentFilter().apply {
             addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
             addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
@@ -180,10 +317,6 @@ class GlobalViewModel(private val context: Context) : ViewModel() {
             IntentFilter(USB_PERMISSION_ACTION),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
-    }
-
-    fun startUsbAutoConnect() {
-        stopUsbAutoConnect()
 //        autoConnectJob = CoroutineScope(Dispatchers.IO).launch {
 //            while (isActive) {
 //                checkAndConnectUsb()
@@ -263,4 +396,45 @@ class GlobalViewModel(private val context: Context) : ViewModel() {
         }
         usbPort = null
     }
+
+    fun stopAll() {
+        stopUsbAutoConnect()
+        masterController.stopAll()
+    }
+
+
+    fun updateDevice( updates: JSONObject) {
+
+        val id = updates.optString("id")
+        val devices = devicesList.value?.toMutableList()
+
+        val index = devices?.indexOfFirst { it.id == id }
+        if (index == -1) return  // device not found
+        println("onMessage 000  "+id+" "+updates.optString("status"))
+        val oldDevice = index?.let { devices.get(it) }
+
+        // Merge updates
+        val updatedDevice = oldDevice?.copy(
+            status = updates.optBoolean("status", oldDevice.status),
+            brightness = updates.optInt("brightness", oldDevice.brightness),
+            mode = updates.optString("mode", oldDevice.mode),
+            timeout = updates.optString("timeout", oldDevice.timeout),
+            toggled = updates.optBoolean("toggled", oldDevice.toggled),
+            lastTriggerAt = updates.optString("lastTriggerAt", oldDevice.lastTriggerAt),
+            animation = updates.optString("animation", oldDevice.animation),
+            startTime = updates.optString("startTime", oldDevice.startTime),
+            endTime = updates.optString("endTime", oldDevice.endTime),
+            lastStatus = updates.optBoolean("lastStatus", oldDevice.lastStatus),
+            more = updates.optString("more", oldDevice.more),
+            sensors = updates.optString("sensors", oldDevice.sensors),
+            temp = updates.optString("temp", oldDevice.temp)
+        )
+        if (updatedDevice != null) {
+            devices[index] = updatedDevice
+            setDevices(devices) // push updated list back to UI
+            print("onMessage status  "+devices[index].status)
+        }
+
+    }
+
 }

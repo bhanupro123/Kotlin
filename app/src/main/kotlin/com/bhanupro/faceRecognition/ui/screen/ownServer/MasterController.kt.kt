@@ -12,6 +12,7 @@ import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.Size
@@ -24,6 +25,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.bhanupro.faceRecognition.app.SnackbarManager
+import com.bhanupro.faceRecognition.lib.DeviceIdManager
+import com.bhanupro.faceRecognition.lib.DeviceType
+import com.bhanupro.faceRecognition.ui.global.Device
+import com.bhanupro.faceRecognition.ui.global.GlobalViewModel
 import com.bhanupro.faceRecognition.ui.screen.ownServer.newDevice.ConnectionState
 import kotlinx.coroutines.*
 import okhttp3.*
@@ -35,6 +40,7 @@ import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 // Keep your Device_Info and ViewModel definitions outside or above; included here for completeness
@@ -42,7 +48,7 @@ data class Device_Info(val ip: String, val name: String)
 
 class MasterController(
     private val context: Context,
-    private val viewModel: Multiple_Stream_ViewModel
+    private val viewModel: GlobalViewModel
 ) {
     companion object {
         private const val TAG_VIDEO = "VideoServer"
@@ -54,7 +60,7 @@ class MasterController(
 
     // --- networking / signaling ---
     private val client = OkHttpClient.Builder()
-        .readTimeout(0, java.util.concurrent.TimeUnit.MILLISECONDS)
+        .readTimeout(0, TimeUnit.MILLISECONDS)
         .build()
 
     private val ip = getWifiIpAddress(context) // implement elsewhere
@@ -530,10 +536,26 @@ class MasterController(
     fun start(signalServerUrl: String) { connectSignal(signalServerUrl) }
 
     private fun connectSignal(url: String) {
+        println(url+"{}{}")
+        SnackbarManager.showMessage("Connecting to "+url)
         val request = Request.Builder().url(url).build()
         signalWebSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
                 try {
+                    SnackbarManager.showMessage("Opened "+url)
+
+                    if (viewModel.deviceType.value== DeviceType.NORMAL &&(
+                        viewModel.devicesList.value==null||
+                        viewModel.devicesList.value?.isEmpty() == true)) {
+                        val message = """
+                    {
+                        "type": "request_devices"
+                    }
+                """.trimIndent()
+                        print("Sending"+message)
+                        ws.send(message)
+                    }
+                    ws.send(DeviceIdManager.getOrCreateId(context))
                     viewModel.setSignalConnected(true)
                     logI(TAG_SIGNAL, "Signaling open: $ip")
                     val json = """
@@ -551,36 +573,88 @@ class MasterController(
             }
 
             override fun onMessage(ws: WebSocket, text: String) {
+
                 try {
                     val json = JSONObject(text)
-                    logI(TAG_SIGNAL, "onMessage: ${text}")
-                    logI(TAG_SIGNAL, "////////////////////////////////////////////////////////\n////////////////////////////////////////////")
-                    uiToast(json.optString("type"))
+                    logI(TAG_SIGNAL, "onMessage: $text")
+                    val type = json.optString("type", "")
 
-                    when (json.optString("type")) {
-                        "new_device" -> {
-                            val deviceJson = json.getJSONObject("device")
-                            val ip = deviceJson.getString("ip")
-                            val name = deviceJson.optString("name", "Unknown")
-                            viewModel.addDevice(Device_Info(ip = ip, name = name))
-                        }
-                        "device_disconnected" -> {
-                            val deviceJson = json.getJSONObject("device")
-                            val ip = deviceJson.getString("ip")
-                            viewModel.removeDeviceByIp(ip)
-                        }
-                        "broadcast" -> {
-                            if (json.optString("action") == "wakeup") {
-                                val toIp = json.getString("toIp")
-                                if (toIp == ip) {
-                                    startServers()
-                                    return
+                    if (type.isNotEmpty()) {
+                        //  uiToast(text)
+                        when (json.optString("type")) {
+                            "update_device" -> {
+                                Handler(Looper.getMainLooper()).post {
+                                    viewModel.updateDevice(json)
                                 }
                             }
+
+                            "devices" -> {
+                                val devicesArray = json.getJSONArray("devices")
+                                val deviceList = mutableListOf<Device>()
+                                for (i in 0 until devicesArray.length()) {
+                                    val d = devicesArray.getJSONObject(i)
+                                    val device = Device(
+                                        id = d.optString("id"),
+                                        name = d.optString("name"),
+                                        desc = d.optString("desc"),
+                                        catogery = d.optString("catogery"),
+                                        deviceType = d.optString("deviceType"),
+                                        brightness = d.optInt("brightness"),
+                                        enabled = d.optBoolean("enabled"),
+                                        status = d.optBoolean("status"),
+                                        toggled = d.optBoolean("toggled"),
+                                        lastTriggerAt = d.optString("lastTriggerAt"),
+                                        animation = d.optString("animation", ""),
+                                        startTime = d.optString("startTime", ""),
+                                        endTime = d.optString("endTime", ""),
+                                        lastStatus = d.optBoolean("lastStatus", false),
+                                        mode = d.optString("mode", ""),
+                                        more = d.optString("more", ""),
+                                        sensors = d.optString("sensors", ""),
+                                        temp = d.optString("temp", ""),
+                                        timeout = d.optString("timeout", "")
+                                    )
+
+                                    deviceList.add(device)
+                                }
+                                Handler(Looper.getMainLooper()).post {
+                                    viewModel.setDevices(deviceList)
+                                }
+                            }
+
+                            "new_device" -> {
+                                val deviceJson = json.getJSONObject("device")
+                                val ip = deviceJson.getString("ip")
+                                val name = deviceJson.optString("name", "Unknown")
+                                viewModel.addDevice(Device_Info(ip = ip, name = name))
+                            }
+
+                            "device_disconnected" -> {
+                                val deviceJson = json.getJSONObject("device")
+                                val ip = deviceJson.getString("ip")
+                                viewModel.removeDeviceByIp(ip)
+                            }
+
+                            "broadcast" -> {
+                                if (json.optString("action") == "wakeup") {
+                                    val toIp = json.getString("toIp")
+                                    if (toIp == ip) {
+                                        startServers()
+                                        return
+                                    }
+                                }
+                            }
+
+                            "hangup" -> stopServers()
                         }
-                        "hangup" -> stopServers()
                     }
-                } catch (e: Exception) {
+                    else if (json.has("id")) {
+                        // no type → assume device update
+                        Handler(Looper.getMainLooper()).post {
+                            viewModel.updateDevice(json)
+                        }
+                    }
+                    } catch (e: Exception) {
                     logE(TAG_SIGNAL, "onMessage parse error: ${e.message}")
                 }
             }
@@ -596,6 +670,7 @@ class MasterController(
             }
 
             override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+                SnackbarManager.showMessage("Closed $reason")
                 logI(TAG_SIGNAL, "onClosed: $reason")
                 viewModel.setSignalConnected(false)
                 scheduleReconnect(url)
